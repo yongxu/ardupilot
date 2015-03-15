@@ -5,7 +5,7 @@
 #
 # Use the configuration's ROMFS.
 #
-ROMFS_ROOT	 = $(SKETCHBOOK)/mk/PX4/ROMFS
+ROMFS_ROOT	?= $(SKETCHBOOK)/mk/PX4/ROMFS
 MODULES		+= $(APM_MODULE_DIR)
 
 #
@@ -51,13 +51,13 @@ MODULES		+= systemcmds/top
 #MODULES	+= systemcmds/tests
 MODULES		+= systemcmds/nshterm
 MODULES         += systemcmds/mtd
-ifneq ($(wildcard $(PX4_ROOT)/src/systemcmds/reflect),)  
+ifneq ($(wildcard $(PX4_ROOT)/src/systemcmds/reflect),)
 MODULES         += systemcmds/reflect
 endif
-ifneq ($(wildcard $(PX4_ROOT)/src/systemcmds/motor_test),)  
+ifneq ($(wildcard $(PX4_ROOT)/src/systemcmds/motor_test),)
 MODULES         += systemcmds/motor_test
 endif
-ifneq ($(wildcard $(PX4_ROOT)/src/systemcmds/usb_connected),)  
+ifneq ($(wildcard $(PX4_ROOT)/src/systemcmds/usb_connected),)
 MODULES         += systemcmds/usb_connected
 endif
 
@@ -70,10 +70,10 @@ MODULES		+= modules/uORB
 MODULES		+= lib/mathlib/math/filter
 
 # Note: auth disabled to keep us under 1MB flash because of STM32 bug
-#ifneq ($(wildcard $(PX4_ROOT)/src/systemcmds/auth),)  
+#ifneq ($(wildcard $(PX4_ROOT)/src/systemcmds/auth),)
 #MODULES		+= systemcmds/auth
 #endif
-#ifneq ($(wildcard $(PX4_ROOT)/src/modules/libtomfastmath),)  
+#ifneq ($(wildcard $(PX4_ROOT)/src/modules/libtomfastmath),)
 #MODULES	        += modules/libtomfastmath
 #MODULES         += modules/libtomcrypt
 #endif
