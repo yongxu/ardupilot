@@ -1,6 +1,7 @@
-#ArduPilot Project#
+#AMP for AVP#
 
-[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/diydrones/ardupilot?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+This project is a motified version of [APMrover2](http://rover.ardupilot.com), it is intended to be used for RC car control and designed to be a part of [autonomous vehecle project of Tesla Works](http://www.teslaworks.net/project/robomagellan/).
+This project was forked from [diydrones/ardupilot](https://github.com/diydrones/ardupilot/).
 
 ### The ArduPilot project is made up of: ###
 >>ArduCopter (or APM:Copter) : [code](https://github.com/diydrones/ardupilot/tree/master/ArduCopter), [wiki](http://copter.ardupilot.com)
