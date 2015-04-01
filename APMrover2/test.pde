@@ -339,7 +339,7 @@ test_ins(uint8_t argc, const Menu::arg *argv)
 	//cliSerial->printf_P(PSTR("Calibrating."));
 	ahrs.init();
     ahrs.set_fly_forward(true);
-	ins.init(AP_InertialSensor::COLD_START, 
+	ins.init(AP_InertialSensor::COLD_START,
              ins_sample_rate);
     ahrs.reset();
 
@@ -360,7 +360,7 @@ test_ins(uint8_t argc, const Menu::arg *argv)
                 medium_loopCounter = 0;
             }
         }
-        
+
         // We are using the IMU
         // ---------------------
         Vector3f gyros 	= ins.get_gyro();
@@ -397,7 +397,7 @@ test_mag(uint8_t argc, const Menu::arg *argv)
     report_compass();
 
     // we need the AHRS initialised for this test
-	ins.init(AP_InertialSensor::COLD_START, 
+	ins.init(AP_InertialSensor::COLD_START,
              ins_sample_rate);
     ahrs.reset();
 
@@ -422,7 +422,7 @@ test_mag(uint8_t argc, const Menu::arg *argv)
             }
             medium_loopCounter = 0;
         }
-        
+
         counter++;
         if (counter>20) {
             if (compass.healthy()) {
@@ -443,7 +443,7 @@ test_mag(uint8_t argc, const Menu::arg *argv)
     }
 
     // save offsets. This allows you to get sane offset values using
-    // the CLI before you go flying.    
+    // the CLI before you go flying.
     cliSerial->println_P(PSTR("saving offsets"));
     compass.save_offsets();
     return (0);
@@ -464,7 +464,7 @@ test_sonar(uint8_t argc, const Menu::arg *argv)
     }
 
     print_hit_enter();
-    
+
     float sonar_dist_cm_min = 0.0f;
     float sonar_dist_cm_max = 0.0f;
     float voltage_min=0.0f, voltage_max = 0.0f;
@@ -477,7 +477,7 @@ test_sonar(uint8_t argc, const Menu::arg *argv)
         delay(20);
         sonar.update();
         uint32_t now = millis();
-    
+
         float dist_cm = sonar.distance_cm(0);
         float voltage = sonar.voltage_mv(0);
         if (sonar_dist_cm_min == 0.0f) {
@@ -501,13 +501,13 @@ test_sonar(uint8_t argc, const Menu::arg *argv)
         voltage2_max = max(voltage2_max, voltage);
 
         if (now - last_print >= 200) {
-            cliSerial->printf_P(PSTR("sonar1 dist=%.1f:%.1fcm volt1=%.2f:%.2f   sonar2 dist=%.1f:%.1fcm volt2=%.2f:%.2f\n"), 
-                                sonar_dist_cm_min, 
-                                sonar_dist_cm_max, 
+            cliSerial->printf_P(PSTR("sonar1 dist=%.1f:%.1fcm volt1=%.2f:%.2f   sonar2 dist=%.1f:%.1fcm volt2=%.2f:%.2f\n"),
+                                sonar_dist_cm_min,
+                                sonar_dist_cm_max,
                                 voltage_min,
                                 voltage_max,
-                                sonar2_dist_cm_min, 
-                                sonar2_dist_cm_max, 
+                                sonar2_dist_cm_min,
+                                sonar2_dist_cm_max,
                                 voltage2_min,
                                 voltage2_max);
             voltage_min = voltage_max = 0.0f;
