@@ -222,39 +222,27 @@ static void ahrs_update()
 }
 
 static void cmd_updates(){
-    static char buf[256];
-    static int buf_pos=0;
-    uint16_t nbytes = hal.console->available();
-    for (uint16_t i=0; i<nbytes; i++)
-    {
-        uint8_t c = hal.console->read();
-        //parse c, one byte at a time
-        buf[buf_pos++]=c;
-        if(buf_pos==255){
-            buf_pos=0;
-            return;
-        }
-        if(c=='\n' || c=='\r'){
-            buf[buf_pos]='\0';
-            buf_pos=0;
-            hal.console->printf("%s\n", buf);
-            return;
-        }
+    // static char buf[256];
+    // static int buf_pos=0;
+    // uint16_t nbytes = hal.console->available();
+    // for (uint16_t i=0; i<nbytes; i++)
+    // {
+    //     uint8_t c = hal.console->read();
+    //     //parse c, one byte at a time
+    //     buf[buf_pos++]=c;
+    //     if(buf_pos==255){
+    //         buf_pos=0;
+    //         return;
+    //     }
+    //     if(c=='\n' || c=='\r'){
+    //         buf[buf_pos]='\0';
+    //         buf_pos=0;
+    //         hal.console->printf("%s\n", buf);
+    //         return;
+    //     }
 
-        hal.console->write(c);
-    }
-}
-
-static void arduino_updates(){
-    uint16_t nbytes = uart_arduino->available();
-    if(nbytes!=0)
-        hal.console->printf("!!\n");
-    for (uint16_t i=0; i<nbytes; i++)
-    {
-        uint8_t c = uart_arduino->read();
-        //parse c, one byte at a time
-        hal.console->write(c);
-    }
+    //     hal.console->write(c);
+    // }
 }
 
 static void uart_init()
@@ -284,9 +272,8 @@ static const AP_Scheduler::Task scheduler_tasks[] PROGMEM = {
     { compass_accumulate,     1,    900 },
     { update_GPS_10Hz,        5,   2500 },
     { one_hundred_ms_loop,     5,  3000 },
-    { one_second_loop,        50,  1800 },
 //    { cmd_updates,            1,   1000 },
-//    { arduino_updates,        1,   1000 }
+    { one_second_loop,        50,  1800 }
 };
 
 void setup(void)
@@ -370,8 +357,7 @@ void loop(void)
                             gps.num_sats(),
                             gps.status());
  //   }
- //
- //
+
     message_tail();
 
     scheduler.tick();
