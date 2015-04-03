@@ -278,7 +278,6 @@ static const AP_Scheduler::Task scheduler_tasks[] PROGMEM = {
 
 void setup(void)
 {
-    gps.init(NULL, serial_manager);
     ahrs.init();
 
     ins.init(AP_InertialSensor::COLD_START,
@@ -286,6 +285,8 @@ void setup(void)
 
     uart_init();
     barometer.init();
+    gps.init(NULL, serial_manager);
+
 
     if( compass.init() ) {
         ahrs.set_compass(&compass);
@@ -346,6 +347,7 @@ void loop(void)
     // static uint32_t last_msg_ms;
     // if (last_msg_ms != gps.last_message_time_ms()) {
     //     last_msg_ms = gps.last_message_time_ms();
+        gps.update();
         const Location &loc = gps.location();
         hal.console->print(",\n\"gps\":{\"lat\": ");
         print_latlon(hal.console, loc.lat);
