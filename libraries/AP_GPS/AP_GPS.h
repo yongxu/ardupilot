@@ -75,7 +75,7 @@ public:
     void update(void);
 
     //True if any of the underlying GPS Drivers are ready to enter
-    //a dgps-based fix beyond 3D lock, such as RTK mode. 
+    //a dgps-based fix beyond 3D lock, such as RTK mode.
     bool can_calculate_base_pos(void);
 
     //Allows the underlying GPS Drivers to enter a differential lock
@@ -135,7 +135,7 @@ public:
         float ground_speed;                 ///< ground speed in m/sec
         int32_t ground_course_cd;           ///< ground course in 100ths of a degree
         uint16_t hdop;                      ///< horizontal dilution of precision in cm
-        uint8_t num_sats;                   ///< Number of visible satelites        
+        uint8_t num_sats;                   ///< Number of visible satelites
         Vector3f velocity;                  ///< 3D velocitiy in m/s, in NED format
         float speed_accuracy;
         float horizontal_accuracy;
@@ -296,8 +296,8 @@ public:
 
 	// the time we last processed a message in milliseconds. This is
 	// used to indicate that we have new GPS data to process
-	uint32_t last_message_time_ms(uint8_t instance) const { 
-        return _GPS_TIMING(instance).last_message_time_ms;        
+	uint32_t last_message_time_ms(uint8_t instance) const {
+        return _GPS_TIMING(instance).last_message_time_ms;
     }
     uint32_t last_message_time_ms(void) const {
         return last_message_time_ms(primary_instance);
@@ -305,15 +305,15 @@ public:
 
     // return last fix time since the 1/1/1970 in microseconds
     uint64_t time_epoch_usec(uint8_t instance);
-    uint64_t time_epoch_usec(void) { 
-        return time_epoch_usec(primary_instance); 
+    uint64_t time_epoch_usec(void) {
+        return time_epoch_usec(primary_instance);
     }
 
 	// return true if the GPS supports vertical velocity values
-    bool have_vertical_velocity(uint8_t instance) const { 
-        return _GPS_STATE(instance).have_vertical_velocity; 
+    bool have_vertical_velocity(uint8_t instance) const {
+        return _GPS_STATE(instance).have_vertical_velocity;
     }
-    bool have_vertical_velocity(void) const { 
+    bool have_vertical_velocity(void) const {
         return have_vertical_velocity(primary_instance);
     }
 
@@ -321,7 +321,7 @@ public:
     float get_lag() const { return 0.2f; }
 
     // set position for HIL
-    void setHIL(uint8_t instance, GPS_Status status, uint64_t time_epoch_ms, 
+    void setHIL(uint8_t instance, GPS_Status status, uint64_t time_epoch_ms,
                 const Location &location, const Vector3f &velocity, uint8_t num_sats,
                 uint16_t hdop, bool _have_vertical_velocity);
 
@@ -339,7 +339,7 @@ public:
 #endif
     AP_Int8 _sbas_mode;
     AP_Int8 _min_elevation;
-    
+
     // handle sending of initialisation strings to the GPS
     void send_blob_start(uint8_t instance, const prog_char *_blob, uint16_t size);
     void send_blob_update(uint8_t instance);
@@ -349,13 +349,13 @@ public:
 
     //MAVLink Status Sending
     void send_mavlink_gps_raw(mavlink_channel_t chan);
-#if GPS_MAX_INSTANCES > 1    
+#if GPS_MAX_INSTANCES > 1
     void send_mavlink_gps2_raw(mavlink_channel_t chan);
 #endif
 
 #if GPS_RTK_AVAILABLE
     void send_mavlink_gps_rtk(mavlink_channel_t chan);
-#if GPS_MAX_INSTANCES > 1    
+#if GPS_MAX_INSTANCES > 1
     void send_mavlink_gps2_rtk(mavlink_channel_t chan);
 #endif
 #endif

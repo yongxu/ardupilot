@@ -40,7 +40,7 @@ extern const AP_HAL::HAL& hal;
   this UART driver maps to a serial device in /dev
  */
 
-void PX4UARTDriver::begin(uint32_t b, uint16_t rxS, uint16_t txS) 
+void PX4UARTDriver::begin(uint32_t b, uint16_t rxS, uint16_t txS)
 {
     if (strcmp(_devpath, "/dev/null") == 0) {
         // leave uninitialised
@@ -146,7 +146,7 @@ void PX4UARTDriver::begin(uint32_t b, uint16_t rxS, uint16_t txS)
 
     if (_writebuf_size != 0 && _readbuf_size != 0 && _fd != -1) {
         if (!_initialised) {
-            ::printf("initialised %s OK %u %u\n", _devpath, 
+            ::printf("initialised %s OK %u %u\n", _devpath,
                      (unsigned)_writebuf_size, (unsigned)_readbuf_size);
         }
         _initialised = true;
@@ -172,7 +172,7 @@ void PX4UARTDriver::set_flow_control(enum flow_control fcontrol)
     _flow_control = fcontrol;
 }
 
-void PX4UARTDriver::begin(uint32_t b) 
+void PX4UARTDriver::begin(uint32_t b)
 {
 	begin(b, 0, 0);
 }
@@ -199,7 +199,7 @@ void PX4UARTDriver::try_initialise(void)
 }
 
 
-void PX4UARTDriver::end() 
+void PX4UARTDriver::end()
 {
     _initialised = false;
     while (_in_timer) hal.scheduler->delay(1);
@@ -224,13 +224,13 @@ void PX4UARTDriver::end()
 
 void PX4UARTDriver::flush() {}
 
-bool PX4UARTDriver::is_initialized() 
-{ 
+bool PX4UARTDriver::is_initialized()
+{
     try_initialise();
-    return _initialised; 
+    return _initialised;
 }
 
-void PX4UARTDriver::set_blocking_writes(bool blocking) 
+void PX4UARTDriver::set_blocking_writes(bool blocking)
 {
     _nonblocking_writes = !blocking;
 }
@@ -240,8 +240,8 @@ bool PX4UARTDriver::tx_pending() { return false; }
 /*
   return number of bytes available to be read from the buffer
  */
-int16_t PX4UARTDriver::available() 
-{ 
+int16_t PX4UARTDriver::available()
+{
 	if (!_initialised) {
         try_initialise();
 		return 0;
@@ -253,8 +253,8 @@ int16_t PX4UARTDriver::available()
 /*
   return number of bytes that can be added to the write buffer
  */
-int16_t PX4UARTDriver::txspace() 
-{ 
+int16_t PX4UARTDriver::txspace()
+{
 	if (!_initialised) {
         try_initialise();
 		return 0;
@@ -266,8 +266,8 @@ int16_t PX4UARTDriver::txspace()
 /*
   read one byte from the read buffer
  */
-int16_t PX4UARTDriver::read() 
-{ 
+int16_t PX4UARTDriver::read()
+{
 	uint8_t c;
     if (_uart_owner_pid != getpid()){
         return -1;
@@ -287,11 +287,11 @@ int16_t PX4UARTDriver::read()
 	return c;
 }
 
-/* 
+/*
    write one byte to the buffer
  */
-size_t PX4UARTDriver::write(uint8_t c) 
-{ 
+size_t PX4UARTDriver::write(uint8_t c)
+{
     if (_uart_owner_pid != getpid()){
         return 0;
     }
@@ -365,7 +365,7 @@ size_t PX4UARTDriver::write(const uint8_t *buffer, size_t size)
         assert(_writebuf_tail+n <= _writebuf_size);
         memcpy(&_writebuf[_writebuf_tail], buffer, n);
         BUF_ADVANCETAIL(_writebuf, n);
-    }        
+    }
     return size;
 }
 
@@ -388,7 +388,7 @@ int PX4UARTDriver::_write_fd(const uint8_t *buf, uint16_t n)
             _os_write_buffer_size == _total_written &&
             (hal.scheduler->micros64() - _last_write_time) > 500*1000UL) {
             // it doesn't look like hw flow control is working
-            ::printf("disabling flow control on %s _total_written=%u\n", 
+            ::printf("disabling flow control on %s _total_written=%u\n",
                      _devpath, (unsigned)_total_written);
             set_flow_control(FLOW_CONTROL_DISABLE);
         }
@@ -414,7 +414,7 @@ int PX4UARTDriver::_write_fd(const uint8_t *buf, uint16_t n)
         // re-opening the ttyACM0 port, which would cause a crash
         if (hal.scheduler->micros64() - _last_write_time > 2000000) {
             // we haven't done a successful write for 2 seconds - try
-            // reopening the port        
+            // reopening the port
             _initialised = false;
             ::close(_fd);
             _fd = ::open(_devpath, O_RDWR);
@@ -424,14 +424,14 @@ int PX4UARTDriver::_write_fd(const uint8_t *buf, uint16_t n)
                 // leave it uninitialised
                 return n;
             }
-            
+
             _last_write_time = hal.scheduler->micros64();
             _initialised = true;
         }
 #else
         _last_write_time = hal.scheduler->micros64();
 #endif
-        // we haven't done a successful write for 2ms, which means the 
+        // we haven't done a successful write for 2ms, which means the
         // port is running at less than 500 bytes/sec. Start
         // discarding bytes, even if this is a blocking port. This
         // prevents the ttyACM0 port blocking startup if the endpoint
@@ -471,7 +471,7 @@ int PX4UARTDriver::_read_fd(uint8_t *buf, uint16_t n)
 /*
   push any pending bytes to/from the serial port. This is called at
   1kHz in the timer thread. Doing it this way reduces the system call
-  overhead in the main task enormously. 
+  overhead in the main task enormously.
  */
 void PX4UARTDriver::_timer_tick(void)
 {
@@ -499,7 +499,7 @@ void PX4UARTDriver::_timer_tick(void)
             // split into two writes
             int ret = _write_fd(&_writebuf[_writebuf_head], n1);
             if (ret == n1 && n > n1) {
-                _write_fd(&_writebuf[_writebuf_head], n - n1);                
+                _write_fd(&_writebuf[_writebuf_head], n - n1);
             }
         }
         perf_end(_perf_uart);
@@ -520,7 +520,7 @@ void PX4UARTDriver::_timer_tick(void)
             int ret = _read_fd(&_readbuf[_readbuf_tail], n1);
             if (ret == n1 && n > n1) {
                 assert(_readbuf_tail+(n-n1) <= _readbuf_size);
-                _read_fd(&_readbuf[_readbuf_tail], n - n1);                
+                _read_fd(&_readbuf[_readbuf_tail], n - n1);
             }
         }
         perf_end(_perf_uart);

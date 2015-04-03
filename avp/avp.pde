@@ -100,6 +100,35 @@ AP_HAL::UARTDriver *uart_tk1;
 AP_HAL::UARTDriver *uart_arduino;
 
 
+void message_head(const char *name,unsigned int &id_counter){
+    hal.console->printf("{\n\"name\":\"%s\",\"id\":%d,\"stamp\":%d,\n",
+        name,id_counter,hal.scheduler->micros());
+    id_counter++;
+}
+void message_tail(){
+    hal.console->printf("\n}#");
+}
+
+static uint16_t radio_last_value[8];
+static void read_radio()
+{
+    bool changed=false;
+    for (uint8_t i=0; i<8; i++) {
+        uint16_t v = hal.rcin->read(i);
+        if (radio_last_value[i] != v) {
+            changed = true;
+            radio_last_value[i] = v;
+        }
+    }
+    if (changed) {
+        for (uint8_t i=0; i<8; i++) {
+            hal.console->printf("%2u:%04u ", (unsigned)i+1, (unsigned)radio_last_value[i]);
+        }
+        hal.console->println();
+    }
+
+}
+
 static void update_compass(void)
 {
     if (compass.read()) {
@@ -142,43 +171,6 @@ static void one_second_loop(void)
 
 static void one_hundred_ms_loop(void)
 {
-    Vector3f drift  = ahrs.get_gyro_drift();
-    Vector3f acc    =ahrs.get_ins().get_accel();
-    hal.console->printf_P(
-            PSTR("r:%4.1f  p:%4.1f y:%4.1f "
-                "drift=(%5.1f %5.1f %5.1f) hdg=%.1f\n"),
-                    ToDeg(ahrs.roll),
-                    ToDeg(ahrs.pitch),
-                    ToDeg(ahrs.yaw),
-                    ToDeg(drift.x),
-                    ToDeg(drift.y),
-                    ToDeg(drift.z),
-                    compass.use_for_yaw() ? ToDeg(heading) : 0.0);
-    hal.console->printf("accel: x:%4.1f  y:%4.1f z:%4.1f \n",acc.x,acc.y,acc.z);
-
-    Vector3f mag=compass.get_field();
-    hal.console->printf("compass: x:%4.1f  y:%4.1f z:%4.1f \n",mag.x,mag.y,mag.z);
-    hal.console->printf("Mag Declination: %4.4f\n",degrees(compass.get_declination()));
-
-
-    static uint32_t last_msg_ms;
-    gps.update();
-    if (last_msg_ms != gps.last_message_time_ms()) {
-        last_msg_ms = gps.last_message_time_ms();
-        const Location &loc = gps.location();
-        hal.console->print("Lat: ");
-        print_latlon(hal.console, loc.lat);
-        hal.console->print(" Lon: ");
-        print_latlon(hal.console, loc.lng);
-        hal.console->printf(" Alt: %.2fm GSP: %.2fm/s CoG: %d SAT: %d TIM: %u/%lu STATUS: %u\n",
-                            loc.alt * 0.01f,
-                            gps.ground_speed(),
-                            (int)gps.ground_course_cd() / 100,
-                            gps.num_sats(),
-                            gps.time_week(),
-                            (unsigned long)gps.time_week_ms(),
-                            gps.status());
-    }
 
 }
 
@@ -217,6 +209,8 @@ static void update_GPS_10Hz(void)
 // update AHRS system
 static void ahrs_update()
 {
+    gps.update();
+
     ahrs.set_fly_forward(true);
 
     ahrs.update();
@@ -228,27 +222,33 @@ static void ahrs_update()
 }
 
 static void cmd_updates(){
-    uint16_t nbytes = uart_tk1->available();
-    for (uint16_t i=0; i<nbytes; i++)
-    {
-        uint8_t c = uart_tk1->read();
-        //parse c, one byte at a time
-        hal.console->write(c);
-    }
-
-
-    //the test below passed
-    /*uint16_t nbytes = hal.console->available();
+    static char buf[256];
+    static int buf_pos=0;
+    uint16_t nbytes = hal.console->available();
     for (uint16_t i=0; i<nbytes; i++)
     {
         uint8_t c = hal.console->read();
         //parse c, one byte at a time
+        buf[buf_pos++]=c;
+        if(buf_pos==255){
+            buf_pos=0;
+            return;
+        }
+        if(c=='\n' || c=='\r'){
+            buf[buf_pos]='\0';
+            buf_pos=0;
+            hal.console->printf("%s\n", buf);
+            return;
+        }
+
         hal.console->write(c);
-    }*/
+    }
 }
 
 static void arduino_updates(){
     uint16_t nbytes = uart_arduino->available();
+    if(nbytes!=0)
+        hal.console->printf("!!\n");
     for (uint16_t i=0; i<nbytes; i++)
     {
         uint8_t c = uart_arduino->read();
@@ -259,13 +259,16 @@ static void arduino_updates(){
 
 static void uart_init()
 {
-    hal.uartC->begin(115200);
-    hal.uartD->begin(57600);
-    uart_tk1=hal.uartC;
-    uart_arduino=hal.uartD;
+    hal.uartA->begin(115200,2048,32768);
+    hal.uartA->set_blocking_writes(true);
+    // hal.uartC->begin(115200);
+    // hal.uartD->begin(57600);
+    // uart_tk1=hal.uartC;
+    // uart_arduino=hal.uartD;
 
-    serial_manager.init_console();
-    serial_manager.set_blocking_writes_all(false);
+    //serial_manager.init_console();
+    //serial_manager.set_blocking_writes_all(false);
+    hal.console->set_flow_control(AP_HAL::UARTDriver::FLOW_CONTROL_DISABLE);
 }
 
 static AP_Scheduler scheduler;
@@ -275,20 +278,20 @@ static AP_Scheduler scheduler;
   they are expected to take (in microseconds)
  */
 static const AP_Scheduler::Task scheduler_tasks[] PROGMEM = {
-    { ahrs_update,            1,   6400 },
-    { update_compass,         5,   2000 },
+    { read_radio,             1,   1000 },
+    { ahrs_update,            1,   9600 },
+    { update_compass,         5,   1500 },
     { compass_accumulate,     1,    900 },
     { update_GPS_10Hz,        5,   2500 },
-    { one_hundred_ms_loop,     5,  1800 },
+    { one_hundred_ms_loop,     5,  3000 },
     { one_second_loop,        50,  1800 },
-    { cmd_updates,            1,   1700 },
-    { arduino_updates,        1,   1700 }
+//    { cmd_updates,            1,   1000 },
+//    { arduino_updates,        1,   1000 }
 };
 
 void setup(void)
 {
-    //gps.init(NULL, serial_manager);
-
+    gps.init(NULL, serial_manager);
     ahrs.init();
 
     ins.init(AP_InertialSensor::COLD_START,
@@ -305,9 +308,13 @@ void setup(void)
 
     ahrs.set_fly_forward(true);
     ahrs.set_vehicle_class(AHRS_VEHICLE_GROUND);
-
+    ahrs.set_ekf_use(true);
     ahrs.reset();
 
+    for (uint8_t i=0; i<14; i++) {
+        hal.rcout->enable_ch(i);
+        hal.rcout->write(i, 1500);
+    }
 
     scheduler.init(&scheduler_tasks[0], sizeof(scheduler_tasks)/sizeof(scheduler_tasks[0]));
 
@@ -324,16 +331,51 @@ void loop(void)
 
     mainLoop_count++;
 
-    // hal.uartC->printf("Hello on UART %s at %.3f seconds\n",
-    //              "C", hal.scheduler->millis()*0.001f);
+    Vector3f drift  = ahrs.get_gyro_drift();
+    Vector3f acc    =ahrs.get_accel_ef_blended();
+    Vector3f vel,pos;
+    ahrs.get_velocity_NED(vel);
+    ahrs.get_relative_position_NED(pos);
 
-    // hal.uartD->printf("Hello on UART %s at %.3f seconds\n",
-    //              "D", hal.scheduler->millis()*0.001f);
-    // hal.console->printf("Hello on console at %.3f seconds\n",
-    //              hal.scheduler->millis()*0.001f);
+    static unsigned int ahrs_id=0;
+    message_head("ahrs",ahrs_id);
+    hal.console->printf("\"gyro\":{\"r\":%f,\"p\":%f,\"y\":%f,\n\"drift\":[%f,%f,%f],\"hdg\":%f},\n",
+                    ToDeg(ahrs.roll),
+                    ToDeg(ahrs.pitch),
+                    ToDeg(ahrs.yaw),
+                    ToDeg(drift.x),
+                    ToDeg(drift.y),
+                    ToDeg(drift.z),
+                    ToDeg(heading));
+
+
+//    ahrs.get_position();
+    hal.console->printf("\"ekf\":\"%s\",\n",ahrs.have_inertial_nav()?"true":"false");
+    hal.console->printf("\"vel\":{\"x\":%4.4f, \"y\":%4.4f,\"z\":%4.4f},\n",vel.x,vel.y,vel.z);
+    hal.console->printf("\"pos\":{\"x\":%4.4f, \"y\":%4.4f,\"z\":%4.4f},\n",pos.x,pos.y,pos.z);
+    hal.console->printf("\"acc\":{\"x\":%4.4f, \"y\":%4.4f,\"z\":%4.4f}",acc.x,acc.y,acc.z);
+
+
+    // static uint32_t last_msg_ms;
+    // if (last_msg_ms != gps.last_message_time_ms()) {
+    //     last_msg_ms = gps.last_message_time_ms();
+        const Location &loc = gps.location();
+        hal.console->print(",\n\"gps\":{\"lat\": ");
+        print_latlon(hal.console, loc.lat);
+        hal.console->print(" ,\"lon\": ");
+        print_latlon(hal.console, loc.lng);
+        hal.console->printf(",\"alt\": %.2f, \"gsp\": %.2f,\"SAT\": %d, \"STATUS\": %u}",
+                            loc.alt * 0.01f,
+                            ground_speed,
+                            gps.num_sats(),
+                            gps.status());
+ //   }
+ //
+ //
+    message_tail();
 
     scheduler.tick();
-    scheduler.run(19500U);
+    scheduler.run(20000U);
 
 }
 
