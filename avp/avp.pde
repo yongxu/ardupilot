@@ -319,7 +319,7 @@ void loop(void)
 
     mainLoop_count++;
 
-    Vector3f drift  = ahrs.get_gyro_drift();
+//    Vector3f drift  = ahrs.get_gyro_drift();
     Vector3f acc    =ahrs.get_accel_ef_blended();
     Vector3f vel,pos;
     ahrs.get_velocity_NED(vel);
@@ -327,14 +327,12 @@ void loop(void)
 
     static unsigned int ahrs_id=0;
     message_head("ahrs",ahrs_id);
-    hal.console->printf("\"gyro\":{\"r\":%f,\"p\":%f,\"y\":%f,\n\"drift\":[%f,%f,%f],\"hdg\":%f},\n",
-                    ToDeg(ahrs.roll),
-                    ToDeg(ahrs.pitch),
-                    ToDeg(ahrs.yaw),
-                    ToDeg(drift.x),
-                    ToDeg(drift.y),
-                    ToDeg(drift.z),
-                    ToDeg(heading));
+    hal.console->printf("\"gyro\":{\"r\":%f,\"p\":%f,\"y\":%f,\"yv\":%f,\"hdg\":%f},\n",
+                    ahrs.roll,
+                    ahrs.pitch,
+                    ahrs.yaw,
+                    ahrs.get_yaw_rate_earth(),
+                    heading);
 
 
 //    ahrs.get_position();
