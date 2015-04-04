@@ -200,16 +200,16 @@ AP_GPS::detect_instance(uint8_t instance)
           for.
         */
         if ((_type[instance] == GPS_TYPE_AUTO || _type[instance] == GPS_TYPE_UBLOX) &&
-            pgm_read_dword(&_baudrates[dstate->last_baud]) >= 38400 && 
+            pgm_read_dword(&_baudrates[dstate->last_baud]) >= 38400 &&
             AP_GPS_UBLOX::_detect(dstate->ublox_detect_state, data)) {
             hal.console->print_P(PSTR(" ublox "));
             new_gps = new AP_GPS_UBLOX(*this, state[instance], _port[instance]);
-        } 
+        }
 		else if ((_type[instance] == GPS_TYPE_AUTO || _type[instance] == GPS_TYPE_MTK19) &&
                  AP_GPS_MTK19::_detect(dstate->mtk19_detect_state, data)) {
 			hal.console->print_P(PSTR(" MTK19 "));
 			new_gps = new AP_GPS_MTK19(*this, state[instance], _port[instance]);
-		} 
+		}
 		else if ((_type[instance] == GPS_TYPE_AUTO || _type[instance] == GPS_TYPE_MTK) &&
                  AP_GPS_MTK::_detect(dstate->mtk_detect_state, data)) {
 			hal.console->print_P(PSTR(" MTK "));
@@ -251,7 +251,7 @@ found_gps:
 	}
 }
 
-bool 
+bool
 AP_GPS::can_calculate_base_pos(void)
 {
 #if GPS_RTK_AVAILABLE
@@ -267,19 +267,19 @@ AP_GPS::can_calculate_base_pos(void)
 /*
     Tells the underlying GPS drivers to capture its current position as home.
  */
-void 
-AP_GPS::calculate_base_pos(void) 
+void
+AP_GPS::calculate_base_pos(void)
 {
 #if GPS_RTK_AVAILABLE
     for (uint8_t i = 0; i<GPS_MAX_INSTANCES; i++) {
         if (drivers[i] != NULL && drivers[i]->can_calculate_base_pos()) {
-            drivers[i]->calculate_base_pos(); 
+            drivers[i]->calculate_base_pos();
         }
     }
 #endif
 }
 
-AP_GPS::GPS_Status 
+AP_GPS::GPS_Status
 AP_GPS::highest_supported_status(uint8_t instance) const
 {
 #if GPS_RTK_AVAILABLE
@@ -289,7 +289,7 @@ AP_GPS::highest_supported_status(uint8_t instance) const
     return AP_GPS::GPS_OK_FIX_3D;
 }
 
-AP_GPS::GPS_Status 
+AP_GPS::GPS_Status
 AP_GPS::highest_supported_status(void) const
 {
 #if GPS_RTK_AVAILABLE
@@ -307,6 +307,7 @@ AP_GPS::highest_supported_status(void) const
 void
 AP_GPS::update_instance(uint8_t instance)
 {
+    //hal.console->printf("update_instance %d\n",(int)_type[instance]);
     if (_type[instance] == GPS_TYPE_HIL) {
         // in HIL, leave info alone
         return;
@@ -364,6 +365,8 @@ AP_GPS::update(void)
 {
     for (uint8_t i=0; i<GPS_MAX_INSTANCES; i++) {
         update_instance(i);
+
+//        hal.console->printf("update_instance %d\n",i);
     }
 
 #if GPS_MAX_INSTANCES > 1
@@ -372,7 +375,8 @@ AP_GPS::update(void)
         if (state[i].status != NO_GPS) {
             num_instances = i+1;
         }
-        if (_auto_switch) {            
+        //hal.console->printf("\nupdate_instance %d,status %d,sat: %d\n",i,(int)state[i].status,state[i].num_sats);
+        if (_auto_switch) {
             if (i == primary_instance) {
                 continue;
             }
@@ -404,9 +408,9 @@ AP_GPS::update(void)
 /*
   set HIL (hardware in the loop) status for a GPS instance
  */
-void 
-AP_GPS::setHIL(uint8_t instance, GPS_Status _status, uint64_t time_epoch_ms, 
-               const Location &_location, const Vector3f &_velocity, uint8_t _num_sats, 
+void
+AP_GPS::setHIL(uint8_t instance, GPS_Status _status, uint64_t time_epoch_ms,
+               const Location &_location, const Vector3f &_velocity, uint8_t _num_sats,
                uint16_t hdop, bool _have_vertical_velocity)
 {
     if (instance >= GPS_MAX_INSTANCES) {
@@ -438,7 +442,7 @@ AP_GPS::setHIL(uint8_t instance, GPS_Status _status, uint64_t time_epoch_ms,
    be used to allow a user to control a GPS port via the
    SERIAL_CONTROL protocol
  */
-void 
+void
 AP_GPS::lock_port(uint8_t instance, bool lock)
 {
     if (instance >= GPS_MAX_INSTANCES) {
@@ -451,7 +455,7 @@ AP_GPS::lock_port(uint8_t instance, bool lock)
     }
 }
 
-void 
+void
 AP_GPS::send_mavlink_gps_raw(mavlink_channel_t chan)
 {
     static uint32_t last_send_time_ms;
@@ -485,7 +489,7 @@ AP_GPS::send_mavlink_gps_raw(mavlink_channel_t chan)
 }
 
 #if GPS_MAX_INSTANCES > 1
-void 
+void
 AP_GPS::send_mavlink_gps2_raw(mavlink_channel_t chan)
 {
     static uint32_t last_send_time_ms;
@@ -517,7 +521,7 @@ AP_GPS::send_mavlink_gps2_raw(mavlink_channel_t chan)
 #endif
 
 #if GPS_RTK_AVAILABLE
-void 
+void
 AP_GPS::send_mavlink_gps_rtk(mavlink_channel_t chan)
 {
     if (drivers[0] != NULL && drivers[0]->highest_supported_status() > AP_GPS::GPS_OK_FIX_3D) {
@@ -526,7 +530,7 @@ AP_GPS::send_mavlink_gps_rtk(mavlink_channel_t chan)
 }
 
 #if GPS_MAX_INSTANCES > 1
-void 
+void
 AP_GPS::send_mavlink_gps2_rtk(mavlink_channel_t chan)
 {
     if (drivers[1] != NULL && drivers[1]->highest_supported_status() > AP_GPS::GPS_OK_FIX_3D) {

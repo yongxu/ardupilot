@@ -50,13 +50,17 @@ AP_GPS_PX4::read(void)
     bool updated = false;
     orb_check(_gps_sub, &updated);
 
+    //hal.console->printf("px4 gps read\n");
     if (updated) {
+
+      //hal.console->printf("px4 gps update succeed \n");
         if (OK == orb_copy(ORB_ID(vehicle_gps_position), _gps_sub, &_gps_pos)) {
             state.last_gps_time_ms = hal.scheduler->millis();
             state.status  = (AP_GPS::GPS_Status) (_gps_pos.fix_type | AP_GPS::NO_FIX);
             state.num_sats = _gps_pos.satellites_used;
             state.hdop = uint16_t(_gps_pos.eph*100.0f + .5f);
 
+            //hal.console->printf("px4 gps read OK and state:%d\n",(int)state.status);
             if (_gps_pos.fix_type >= 2) {
                 state.location.lat = _gps_pos.lat;
                 state.location.lng = _gps_pos.lon;

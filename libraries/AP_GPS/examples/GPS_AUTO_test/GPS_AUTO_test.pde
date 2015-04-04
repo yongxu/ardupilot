@@ -58,10 +58,10 @@ void setup()
 
 void loop()
 {
-    static uint32_t last_msg_ms;
+//    static uint32_t last_msg_ms;
     gps.update();
-    if (last_msg_ms != gps.last_message_time_ms()) {
-        last_msg_ms = gps.last_message_time_ms();
+//    if (last_msg_ms != gps.last_message_time_ms()) {
+//        last_msg_ms = gps.last_message_time_ms();
         const Location &loc = gps.location();
         hal.console->print("Lat: ");
         print_latlon(hal.console, loc.lat);
@@ -74,8 +74,8 @@ void loop()
                             gps.num_sats(),
                             gps.time_week(),
                             (unsigned long)gps.time_week_ms(),
-                            gps.status());
-    }
+                            (unsigned int)gps.status());
+//    }
     hal.scheduler->delay(10);
 }
 

@@ -144,7 +144,7 @@ public:
     const OpticalFlow* get_optflow() const {
         return _optflow;
     }
-        
+
     // allow for runtime change of orientation
     // this makes initial config easier
     void set_orientation() {
@@ -265,12 +265,12 @@ public:
 
     // return a ground velocity in meters/second, North/East/Down
     // order. This will only be accurate if have_inertial_nav() is
-    // true 
+    // true
     virtual bool get_velocity_NED(Vector3f &vec) const { return false; }
 
     // return a position relative to home in meters, North/East/Down
     // order. This will only be accurate if have_inertial_nav() is
-    // true 
+    // true
     virtual bool get_relative_position_NED(Vector3f &vec) const { return false; }
 
     // return ground speed estimate in meters/second. Used by ground vehicles.
@@ -337,7 +337,7 @@ public:
     virtual bool get_secondary_position(struct Location &loc) { return false; }
 
     // get the home location. This is const to prevent any changes to
-    // home without telling AHRS about the change    
+    // home without telling AHRS about the change
     const struct Location &get_home(void) const { return _home; }
 
     // set the home location in 10e7 degrees. This should be called
@@ -419,7 +419,7 @@ protected:
 	// filter in AP_AHRS::groundspeed_vector
 	Vector2f _lp; // ground vector low-pass filter
 	Vector2f _hp; // ground vector high-pass filter
-    Vector2f _lastGndVelADS; // previous HPF input		
+    Vector2f _lastGndVelADS; // previous HPF input
 
     // reference position for NED positions
     struct Location _home;

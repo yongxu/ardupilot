@@ -40,14 +40,14 @@ public:
 #if GPS_RTK_AVAILABLE
 
     // true once an RTK GPS Driver has a converged baseline vector and
-    // absolute single point solution to enter into an RTK Fix. 
+    // absolute single point solution to enter into an RTK Fix.
     virtual bool can_calculate_base_pos(void) { return false; };
 
     // tells a RTK GPS Driver to capture the current single-point solution
     // and baseline solution as the current home data.
     virtual void calculate_base_pos(void) {};
 
-    // Highest status supported by this GPS. 
+    // Highest status supported by this GPS.
     // Allows external system to identify type of receiver connected.
     virtual AP_GPS::GPS_Status highest_supported_status(void) { return AP_GPS::GPS_OK_FIX_3D; }
 
@@ -60,7 +60,7 @@ public:
 
 #endif
 
-protected:
+//protected:
     AP_HAL::UARTDriver *port;           ///< UART we are attached to
     AP_GPS &gps;                        ///< access to frontend (for parameters)
     AP_GPS::GPS_State &state;           ///< public state for this instance

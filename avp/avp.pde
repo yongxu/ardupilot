@@ -1,6 +1,7 @@
 #include <math.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <string.h>
 
 // Libraries
 #include <AP_Common.h>
@@ -109,6 +110,27 @@ void message_tail(){
     hal.console->printf("\n}#");
 }
 
+int parse_avp_cmd(char* cmd ){
+    size_t pos=0;
+    int argc=0;
+    char *argv[20];
+    size_t cmd_len=strlen(cmd);
+    while (pos<cmd_len) {
+        argv[argc]=strtok(cmd+pos, " ");
+        pos+=strlen(argv[argc])+1;
+        argc++;
+    }
+
+    if (!strcmp(argv[0], "arm")) {
+        printf("arm!\n");
+    }
+    if (!strcmp(argv[0], "mov")) {
+        printf("mov!\n");
+    }
+
+    return 0;
+}
+
 static uint16_t radio_last_value[8];
 static void read_radio()
 {
@@ -122,9 +144,9 @@ static void read_radio()
     }
     if (changed) {
         for (uint8_t i=0; i<8; i++) {
-            hal.console->printf("%2u:%04u ", (unsigned)i+1, (unsigned)radio_last_value[i]);
+ //           hal.console->printf("%2u:%04u ", (unsigned)i+1, (unsigned)radio_last_value[i]);
         }
-        hal.console->println();
+ //       hal.console->println();
     }
 
 }
@@ -209,7 +231,7 @@ static void update_GPS_10Hz(void)
 // update AHRS system
 static void ahrs_update()
 {
-    gps.update();
+    //gps.update();
 
     ahrs.set_fly_forward(true);
 
@@ -222,49 +244,40 @@ static void ahrs_update()
 }
 
 static void cmd_updates(){
-    // static char buf[256];
-    // static int buf_pos=0;
-    // uint16_t nbytes = hal.console->available();
-    // for (uint16_t i=0; i<nbytes; i++)
-    // {
-    //     uint8_t c = hal.console->read();
-    //     //parse c, one byte at a time
-    //     buf[buf_pos++]=c;
-    //     if(buf_pos==255){
-    //         buf_pos=0;
-    //         return;
-    //     }
-    //     if(c=='\n' || c=='\r'){
-    //         buf[buf_pos]='\0';
-    //         buf_pos=0;
-    //         hal.console->printf("%s\n", buf);
-    //         return;
-    //     }
-
-    //     hal.console->write(c);
-    // }
+    static char buf[256];
+    static int buf_pos=0;
+    uint16_t nbytes = hal.console->available();
+    for (uint16_t i=0; i<nbytes; i++)
+    {
+        uint8_t c = hal.console->read();
+        //parse c, one byte at a time
+        buf[buf_pos++]=c;
+        if(buf_pos==255){
+            buf_pos=0;
+            return;
+        }
+        if(c=='\n' || c=='\r'){
+            buf[buf_pos]='\0';
+            buf_pos=0;
+            parse_avp_cmd(buf);
+            hal.console->printf("%s\n", buf);
+            return;
+        }
+        //hal.console->write(c);
+    }
 }
 
 static void uart_init()
 {
+    serial_manager.init_console();
     hal.uartA->begin(115200,2048,32768);
     hal.uartA->set_blocking_writes(true);
-    // hal.uartC->begin(115200);
-    // hal.uartD->begin(57600);
-    // uart_tk1=hal.uartC;
-    // uart_arduino=hal.uartD;
 
-    //serial_manager.init_console();
-    //serial_manager.set_blocking_writes_all(false);
     hal.console->set_flow_control(AP_HAL::UARTDriver::FLOW_CONTROL_DISABLE);
 }
 
 static AP_Scheduler scheduler;
-/*
-  scheduler table - all regular tasks are listed here, along with how
-  often they should be called (in 20ms units) and the maximum time
-  they are expected to take (in microseconds)
- */
+
 static const AP_Scheduler::Task scheduler_tasks[] PROGMEM = {
     { read_radio,             1,   1000 },
     { ahrs_update,            1,   9600 },
@@ -272,7 +285,7 @@ static const AP_Scheduler::Task scheduler_tasks[] PROGMEM = {
     { compass_accumulate,     1,    900 },
     { update_GPS_10Hz,        5,   2500 },
     { one_hundred_ms_loop,     5,  3000 },
-//    { cmd_updates,            1,   1000 },
+//    { cmd_updates,            1,   4000 },
     { one_second_loop,        50,  1800 }
 };
 
@@ -285,7 +298,10 @@ void setup(void)
 
     uart_init();
     barometer.init();
+    gps._type[0]=9;
     gps.init(NULL, serial_manager);
+
+    //gps._type[1]=9;
 
 
     if( compass.init() ) {
@@ -319,7 +335,6 @@ void loop(void)
 
     mainLoop_count++;
 
-//    Vector3f drift  = ahrs.get_gyro_drift();
     Vector3f acc    =ahrs.get_accel_ef_blended();
     Vector3f vel,pos;
     ahrs.get_velocity_NED(vel);
@@ -356,9 +371,9 @@ void loop(void)
                             ground_speed,
                             gps.num_sats(),
                             gps.status());
- //   }
+//   }
 
-    message_tail();
+   message_tail();
 
     scheduler.tick();
     scheduler.run(20000U);
